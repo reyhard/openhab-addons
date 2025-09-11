@@ -429,6 +429,17 @@
 		<autoUpdatePolicy>veto</autoUpdatePolicy>
 	</channel-type>
 
+	<channel-type id="doorlock-unlock">
+		<item-type>Switch</item-type>
+		<label>Door Unlock</label>
+		<description>Momentary unlock action that pulls the latch to open the door</description>
+		<tags>
+			<tag>Control</tag>
+			<tag>Action</tag>
+		</tags>
+		<autoUpdatePolicy>veto</autoUpdatePolicy>
+	</channel-type>
+
 
 	<channel-type id="electricalenergymeasurement-energymeasurmement-energy">
 		<item-type>Number:Energy</item-type>

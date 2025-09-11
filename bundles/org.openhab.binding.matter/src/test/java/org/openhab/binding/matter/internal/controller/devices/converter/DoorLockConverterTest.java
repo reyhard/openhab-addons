@@ -59,10 +59,23 @@ class DoorLockConverterTest extends BaseMatterConverterTest {
     void testCreateChannels() {
         ChannelGroupUID channelGroupUID = new ChannelGroupUID("matter:node:test:12345:1");
         Map<Channel, @Nullable StateDescription> channels = converter.createChannels(channelGroupUID);
-        assertEquals(1, channels.size());
-        Channel channel = channels.keySet().iterator().next();
-        assertEquals("matter:node:test:12345:1#doorlock-lockstate", channel.getUID().toString());
-        assertEquals("Switch", channel.getAcceptedItemType());
+        assertEquals(2, channels.size());
+
+        // Verify both channels are created
+        boolean foundLockState = false;
+        boolean foundUnlock = false;
+        for (Channel channel : channels.keySet()) {
+            String channelId = channel.getUID().getIdWithoutGroup();
+            if ("doorlock-lockstate".equals(channelId)) {
+                foundLockState = true;
+                assertEquals("Switch", channel.getAcceptedItemType());
+            } else if ("doorlock-unlock".equals(channelId)) {
+                foundUnlock = true;
+                assertEquals("Switch", channel.getAcceptedItemType());
+            }
+        }
+        assertEquals(true, foundLockState, "doorlock-lockstate channel should be created");
+        assertEquals(true, foundUnlock, "doorlock-unlock channel should be created");
     }
 
     @Test
@@ -78,7 +91,20 @@ class DoorLockConverterTest extends BaseMatterConverterTest {
         ChannelUID channelUID = new ChannelUID("matter:node:test:12345:1#doorlock-lockstate");
         converter.handleCommand(channelUID, OnOffType.OFF);
         verify(mockHandler, times(1)).sendClusterCommand(eq(1), eq(DoorLockCluster.CLUSTER_NAME),
+                eq(DoorLockCluster.unboltDoor(null)));
+    }
+
+    @Test
+    void testHandleCommandMomentaryUnlock() {
+        ChannelUID channelUID = new ChannelUID("matter:node:test:12345:1#doorlock-unlock");
+        converter.handleCommand(channelUID, OnOffType.ON);
+
+        // Verify unlockDoor command is sent
+        verify(mockHandler, times(1)).sendClusterCommand(eq(1), eq(DoorLockCluster.CLUSTER_NAME),
                 eq(DoorLockCluster.unlockDoor(null)));
+
+        // Verify momentary behavior - state is immediately set back to OFF
+        verify(mockHandler, times(1)).updateState(eq(1), eq("doorlock-unlock"), eq(OnOffType.OFF));
     }
 
     @Test

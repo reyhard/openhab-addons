@@ -13,9 +13,11 @@
 package org.openhab.binding.matter.internal.controller.devices.converter;
 
 import static org.openhab.binding.matter.internal.MatterBindingConstants.CHANNEL_DOORLOCK_STATE;
+import static org.openhab.binding.matter.internal.MatterBindingConstants.CHANNEL_DOORLOCK_UNLOCK;
 import static org.openhab.binding.matter.internal.MatterBindingConstants.CHANNEL_ID_DOORLOCK_STATE;
+import static org.openhab.binding.matter.internal.MatterBindingConstants.CHANNEL_ID_DOORLOCK_UNLOCK;
 
-import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
@@ -48,19 +50,41 @@ public class DoorLockConverter extends GenericConverter<DoorLockCluster> {
 
     @Override
     public Map<Channel, @Nullable StateDescription> createChannels(ChannelGroupUID channelGroupUID) {
-        Channel channel = ChannelBuilder
+        Map<Channel, @Nullable StateDescription> channels = new LinkedHashMap<>();
+
+        // Lock state channel - reflects actual lock state
+        Channel lockStateChannel = ChannelBuilder
                 .create(new ChannelUID(channelGroupUID, CHANNEL_ID_DOORLOCK_STATE), CoreItemFactory.SWITCH)
                 .withType(CHANNEL_DOORLOCK_STATE).build();
+        channels.put(lockStateChannel, null);
 
-        return Collections.singletonMap(channel, null);
+        // Unlock channel - momentary command-only channel
+        Channel unlockChannel = ChannelBuilder
+                .create(new ChannelUID(channelGroupUID, CHANNEL_ID_DOORLOCK_UNLOCK), CoreItemFactory.SWITCH)
+                .withType(CHANNEL_DOORLOCK_UNLOCK).build();
+        channels.put(unlockChannel, null);
+
+        return channels;
     }
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
         if (command instanceof OnOffType onOffType) {
-            ClusterCommand doorLockCommand = onOffType == OnOffType.ON ? DoorLockCluster.lockDoor(null)
-                    : DoorLockCluster.unlockDoor(null);
-            handler.sendClusterCommand(endpointNumber, DoorLockCluster.CLUSTER_NAME, doorLockCommand);
+            String channelId = channelUID.getIdWithoutGroup();
+
+            if (CHANNEL_ID_DOORLOCK_STATE.equals(channelId)) {
+                // Lock state channel: ON = lock, OFF = unbolt (unlock without pulling latch)
+                ClusterCommand doorLockCommand = onOffType == OnOffType.ON ? DoorLockCluster.lockDoor(null)
+                        : DoorLockCluster.unboltDoor(null);
+                handler.sendClusterCommand(endpointNumber, DoorLockCluster.CLUSTER_NAME, doorLockCommand);
+            } else if (CHANNEL_ID_DOORLOCK_UNLOCK.equals(channelId) && onOffType == OnOffType.ON) {
+                // Unlock channel: momentary action - only responds to ON commands
+                ClusterCommand doorLockCommand = DoorLockCluster.unlockDoor(null);
+                handler.sendClusterCommand(endpointNumber, DoorLockCluster.CLUSTER_NAME, doorLockCommand);
+
+                // Immediately set back to OFF for momentary behavior
+                updateState(CHANNEL_ID_DOORLOCK_UNLOCK, OnOffType.OFF);
+            }
         }
         super.handleCommand(channelUID, command);
     }
