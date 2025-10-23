@@ -88,6 +88,9 @@ public class MatterBindingConstants {
     public static final String CHANNEL_ID_DOORLOCK_UNLOCK = "doorlock-unlock";
     public static final ChannelTypeUID CHANNEL_DOORLOCK_UNLOCK = new ChannelTypeUID(BINDING_ID,
             CHANNEL_ID_DOORLOCK_UNLOCK);
+    public static final String CHANNEL_ID_DOORLOCK_OPERATING_MODE = "doorlock-operatingmode";
+    public static final ChannelTypeUID CHANNEL_DOORLOCK_OPERATING_MODE = new ChannelTypeUID(BINDING_ID,
+            CHANNEL_ID_DOORLOCK_OPERATING_MODE);
     public static final String CHANNEL_ID_WINDOWCOVERING_LIFT = "windowcovering-lift";
     public static final ChannelTypeUID CHANNEL_WINDOWCOVERING_LIFT = new ChannelTypeUID(BINDING_ID,
             CHANNEL_ID_WINDOWCOVERING_LIFT);

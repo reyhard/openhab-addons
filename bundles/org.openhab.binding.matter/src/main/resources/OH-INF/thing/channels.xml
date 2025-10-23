@@ -435,9 +435,28 @@
 		<description>Momentary unlock action that pulls the latch to open the door</description>
 		<tags>
 			<tag>Control</tag>
-			<tag>Action</tag>
+			<tag>OpenState</tag>
 		</tags>
 		<autoUpdatePolicy>veto</autoUpdatePolicy>
+	</channel-type>
+
+	<channel-type id="doorlock-operatingmode">
+		<item-type>Number</item-type>
+		<label>Operating Mode</label>
+		<description>Sets the operating mode of the door lock</description>
+		<tags>
+			<tag>Control</tag>
+			<tag>Mode</tag>
+		</tags>
+		<state>
+			<options>
+				<option value="0">Normal</option>
+				<option value="1">Vacation</option>
+				<option value="2">Privacy</option>
+				<option value="3">No Remote Lock Unlock</option>
+				<option value="4">Passage</option>
+			</options>
+		</state>
 	</channel-type>
 
 

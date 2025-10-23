@@ -12,8 +12,10 @@
  */
 package org.openhab.binding.matter.internal.controller.devices.converter;
 
+import static org.openhab.binding.matter.internal.MatterBindingConstants.CHANNEL_DOORLOCK_OPERATING_MODE;
 import static org.openhab.binding.matter.internal.MatterBindingConstants.CHANNEL_DOORLOCK_STATE;
 import static org.openhab.binding.matter.internal.MatterBindingConstants.CHANNEL_DOORLOCK_UNLOCK;
+import static org.openhab.binding.matter.internal.MatterBindingConstants.CHANNEL_ID_DOORLOCK_OPERATING_MODE;
 import static org.openhab.binding.matter.internal.MatterBindingConstants.CHANNEL_ID_DOORLOCK_STATE;
 import static org.openhab.binding.matter.internal.MatterBindingConstants.CHANNEL_ID_DOORLOCK_UNLOCK;
 
@@ -27,6 +29,7 @@ import org.openhab.binding.matter.internal.client.dto.cluster.gen.DoorLockCluste
 import org.openhab.binding.matter.internal.client.dto.ws.AttributeChangedMessage;
 import org.openhab.binding.matter.internal.handler.MatterBaseThingHandler;
 import org.openhab.core.library.CoreItemFactory;
+import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.thing.Channel;
 import org.openhab.core.thing.ChannelGroupUID;
@@ -59,19 +62,28 @@ public class DoorLockConverter extends GenericConverter<DoorLockCluster> {
         channels.put(lockStateChannel, null);
 
         // Unlock channel - momentary command-only channel
-        Channel unlockChannel = ChannelBuilder
-                .create(new ChannelUID(channelGroupUID, CHANNEL_ID_DOORLOCK_UNLOCK), CoreItemFactory.SWITCH)
-                .withType(CHANNEL_DOORLOCK_UNLOCK).build();
-        channels.put(unlockChannel, null);
+        // Only create this channel if the unbolting feature is supported
+        if (initializingCluster.featureMap.unbolting) {
+            Channel unlockChannel = ChannelBuilder
+                    .create(new ChannelUID(channelGroupUID, CHANNEL_ID_DOORLOCK_UNLOCK), CoreItemFactory.SWITCH)
+                    .withType(CHANNEL_DOORLOCK_UNLOCK).build();
+            channels.put(unlockChannel, null);
+        }
+
+        // Operating mode channel
+        Channel operatingModeChannel = ChannelBuilder
+                .create(new ChannelUID(channelGroupUID, CHANNEL_ID_DOORLOCK_OPERATING_MODE), CoreItemFactory.NUMBER)
+                .withType(CHANNEL_DOORLOCK_OPERATING_MODE).build();
+        channels.put(operatingModeChannel, null);
 
         return channels;
     }
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
-        if (command instanceof OnOffType onOffType) {
-            String channelId = channelUID.getIdWithoutGroup();
+        String channelId = channelUID.getIdWithoutGroup();
 
+        if (command instanceof OnOffType onOffType) {
             if (CHANNEL_ID_DOORLOCK_STATE.equals(channelId)) {
                 // Lock state channel: ON = lock, OFF = unbolt (unlock without pulling latch)
                 ClusterCommand doorLockCommand = onOffType == OnOffType.ON ? DoorLockCluster.lockDoor(null)
@@ -85,6 +97,10 @@ public class DoorLockConverter extends GenericConverter<DoorLockCluster> {
                 // Immediately set back to OFF for momentary behavior
                 updateState(CHANNEL_ID_DOORLOCK_UNLOCK, OnOffType.OFF);
             }
+        } else if (command instanceof DecimalType decimalType && CHANNEL_ID_DOORLOCK_OPERATING_MODE.equals(channelId)) {
+            // Operating mode channel: write the operating mode attribute
+            handler.writeAttribute(endpointNumber, DoorLockCluster.CLUSTER_NAME, "operatingMode",
+                    String.valueOf(decimalType.intValue()));
         }
         super.handleCommand(channelUID, command);
     }
@@ -97,6 +113,12 @@ public class DoorLockConverter extends GenericConverter<DoorLockCluster> {
                     updateState(CHANNEL_ID_DOORLOCK_STATE,
                             lockState == DoorLockCluster.LockStateEnum.LOCKED ? OnOffType.ON : OnOffType.OFF);
                 }
+                break;
+            case "operatingMode":
+                if (message.value instanceof DoorLockCluster.OperatingModeEnum operatingMode) {
+                    updateState(CHANNEL_ID_DOORLOCK_OPERATING_MODE, new DecimalType(operatingMode.getValue()));
+                }
+                break;
             default:
                 break;
         }
@@ -107,5 +129,9 @@ public class DoorLockConverter extends GenericConverter<DoorLockCluster> {
     public void initState() {
         updateState(CHANNEL_ID_DOORLOCK_STATE,
                 initializingCluster.lockState == DoorLockCluster.LockStateEnum.LOCKED ? OnOffType.ON : OnOffType.OFF);
+        if (initializingCluster.operatingMode != null) {
+            updateState(CHANNEL_ID_DOORLOCK_OPERATING_MODE,
+                    new DecimalType(initializingCluster.operatingMode.getValue()));
+        }
     }
 }
