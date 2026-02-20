@@ -199,6 +199,18 @@ public final class ProtocolUtils {
         return !(crc32.getValue() != (expectedCrc32 & 0xFFFFFFFFL));
     }
 
+    /**
+     * Handles messages with protocol 301 (map/image payload).
+     * Decrypts the transport payload, validates and parses the map transport header,
+     * then decrypts, unpads, and decompresses the map body.
+     *
+     * @param message The full message byte array.
+     * @param header The parsed message header.
+     * @param localKey The local key for transport payload decryption.
+     * @param nonce The nonce used for AES/CBC decryption of the map body.
+     * @param endpointPrefix Optional endpoint prefix for validation/logging.
+     * @return A {@link MapPayloadResponse} when decoding succeeds, otherwise {@link IgnoredResponse}.
+     */
     private static DecodedMessage handleImageProtocol(byte[] message, MessageHeader header, String localKey,
             byte[] nonce, String endpointPrefix) {
         int payloadStart = HEADER_LENGTH_WITHOUT_CRC;
@@ -227,12 +239,14 @@ public final class ProtocolUtils {
         byte[] endpointBytes = Arrays.copyOfRange(payload, 0, MAP_ENDPOINT_LENGTH);
         byte[] reservedBytes = Arrays.copyOfRange(payload, MAP_ENDPOINT_LENGTH,
                 MAP_ENDPOINT_LENGTH + MAP_RESERVED_LENGTH);
+        int requestId = readInt16LE(payload, MAP_REQUEST_ID_OFFSET);
         byte[] tailBytes = Arrays.copyOfRange(payload, MAP_REQUEST_ID_OFFSET + 2,
                 MAP_REQUEST_ID_OFFSET + 2 + MAP_TAIL_LENGTH);
         String endpoint = new String(endpointBytes, StandardCharsets.UTF_8).replace("\0", "");
         if (!endpointPrefix.isEmpty() && !endpoint.startsWith(endpointPrefix)) {
-            LOGGER.debug("Protocol {} endpoint mismatch. expectedPrefix='{}', actualEndpoint='{}'. Continuing decode.",
-                    PROTOCOL_MAP, endpointPrefix, endpoint);
+            LOGGER.debug(
+                    "Protocol {} endpoint mismatch for requestId={}. expectedPrefix='{}', actualEndpoint='{}'. Continuing decode.",
+                    PROTOCOL_MAP, requestId, endpointPrefix, endpoint);
         }
 
         if (LOGGER.isTraceEnabled()) {
@@ -240,7 +254,6 @@ public final class ProtocolUtils {
                     reservedBytes.length, tailBytes.length);
         }
 
-        int requestId = readInt16LE(payload, MAP_REQUEST_ID_OFFSET);
         byte[] encryptedBody = Arrays.copyOfRange(payload, MAP_TRANSPORT_HEADER_LENGTH, payload.length);
 
         try {

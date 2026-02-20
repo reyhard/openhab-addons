@@ -149,6 +149,42 @@ class RRMapRendererTest {
         assertEquals(Math.round(1500 * (DOWNSCALE_TARGET_MAX_DIMENSION / 3000.0f)), image.getHeight());
     }
 
+    @Test
+    void renderAsPngPlacesMarkersAtCoordinateAnchoredPositions() throws Exception {
+        RRMapRenderer renderer = new RRMapRenderer();
+
+        int width = 1200;
+        int height = 1200;
+        byte[] baseImage = new byte[width * height];
+        for (int i = 0; i < baseImage.length; i++) {
+            baseImage[i] = (byte) 0xFF;
+        }
+
+        RRMapData mapData = new RRMapData(width, height, 0, 0, baseImage, 500, 500, 0, 1000, 500, null, null, List.of(),
+                List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
+                List.of(new RRMapData.MapObstacle(1500, 500, 2)), List.of(), new byte[width * height]);
+
+        byte[] png = renderer.renderAsPng(mapData);
+        BufferedImage image = ImageIO.read(new ByteArrayInputStream(png));
+
+        int robotX = renderedX(mapData, image.getWidth(), 500);
+        int robotY = renderedY(mapData, 500);
+        int chargerX = renderedX(mapData, image.getWidth(), 1000);
+        int chargerY = renderedY(mapData, 500);
+        int obstacleX = renderedX(mapData, image.getWidth(), 1500);
+        int obstacleY = renderedY(mapData, 500);
+
+        assertTrue(hasMatchingPixel(image, robotX - 2, robotY - 2, robotX + 2, robotY + 2,
+                c -> c.getBlue() > 180 && c.getBlue() > c.getRed()));
+        assertTrue(hasMatchingPixel(image, chargerX - 2, chargerY - 2, chargerX + 2, chargerY + 2,
+                c -> c.getRed() > 200 && c.getGreen() > 150 && c.getBlue() < 120));
+        assertTrue(hasMatchingPixel(image, obstacleX - 2, obstacleY - 2, obstacleX + 2, obstacleY + 2,
+                c -> c.getRed() > 180 && c.getGreen() < 120));
+
+        assertTrue(hasMatchingPixel(image, robotX - 6, robotY - 1, robotX - 3, robotY + 1,
+                c -> c.getRed() > 220 && c.getGreen() > 220 && c.getBlue() > 220));
+    }
+
     private RRMapData createMapData(int width, int height) {
         byte[] imageData = new byte[width * height];
         for (int i = 0; i < imageData.length; i++) {
@@ -158,6 +194,16 @@ class RRMapRendererTest {
         return new RRMapData(width, height, 0, 0, imageData, null, null, null, null, null, null, null, List.of(),
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
                 new byte[width * height]);
+    }
+
+    private int renderedX(RRMapData mapData, int renderWidth, int robotCoordinateX) {
+        float sourceX = mapData.imageWidth() + mapData.left() - (robotCoordinateX / 50.0f);
+        return renderWidth - 1 - Math.round(sourceX);
+    }
+
+    private int renderedY(RRMapData mapData, int robotCoordinateY) {
+        float sourceY = mapData.imageHeight() - (robotCoordinateY / 50.0f - mapData.top());
+        return Math.round(sourceY);
     }
 
     private boolean hasMatchingPixel(BufferedImage image, int xMin, int yMin, int xMax, int yMax,

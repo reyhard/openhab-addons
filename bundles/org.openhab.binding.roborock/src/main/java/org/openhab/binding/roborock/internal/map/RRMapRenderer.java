@@ -66,6 +66,9 @@ public final class RRMapRenderer {
     private static final Color COLOR_OBSTACLE = new Color(254, 73, 73);
     private static final Color COLOR_IGNORED_OBSTACLE = new Color(188, 188, 188);
 
+    // Mapping mirrors known Roborock obstacle classifier ids from field captures.
+    // Keep duplicate labels when multiple ids represent vendor-distinct but UI-equivalent classes,
+    // and extend this table conservatively as new ids are validated.
     private static final Map<Integer, String> OBSTACLE_TYPE_LABELS = Map.ofEntries(Map.entry(0, "cable"),
             Map.entry(1, "pet waste"), Map.entry(2, "shoes"), Map.entry(3, "poop"), Map.entry(4, "pedestal"),
             Map.entry(5, "extension cord"), Map.entry(9, "weighting scale"), Map.entry(10, "clothes"),

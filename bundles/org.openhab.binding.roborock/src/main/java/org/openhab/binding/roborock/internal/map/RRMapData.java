@@ -20,7 +20,7 @@ import org.eclipse.jdt.annotation.Nullable;
 /**
  * Parsed Roborock RR map content.
  *
- * @author OpenHAB project contribution
+ * @author reyhard - Initial contribution
  */
 @NonNullByDefault
 public record RRMapData(int imageWidth, int imageHeight, int top, int left, byte[] imageData, @Nullable Integer robotX,
@@ -29,6 +29,12 @@ public record RRMapData(int imageWidth, int imageHeight, int top, int left, byte
         List<MapPoint> predictedPath, List<MapZone> cleanedZones, List<MapWall> virtualWalls, List<MapArea> noGoAreas,
         List<MapArea> mopForbiddenAreas, List<MapArea> carpetForbiddenAreas, List<MapObstacle> obstacles,
         List<MapObstacle> ignoredObstacles, byte[] mopPathMask, byte[] carpetMapMask) {
+
+    public RRMapData {
+        imageData = imageData.clone();
+        mopPathMask = mopPathMask.clone();
+        carpetMapMask = carpetMapMask.clone();
+    }
 
     public RRMapData(int imageWidth, int imageHeight, int top, int left, byte[] imageData, @Nullable Integer robotX,
             @Nullable Integer robotY, @Nullable Integer robotAngle, @Nullable Integer chargerX,
@@ -40,6 +46,21 @@ public record RRMapData(int imageWidth, int imageHeight, int top, int left, byte
         this(imageWidth, imageHeight, top, left, imageData, robotX, robotY, robotAngle, chargerX, chargerY, gotoTargetX,
                 gotoTargetY, basicPath, gotoPath, predictedPath, cleanedZones, virtualWalls, noGoAreas,
                 mopForbiddenAreas, carpetForbiddenAreas, obstacles, ignoredObstacles, mopPathMask, new byte[0]);
+    }
+
+    @Override
+    public byte[] imageData() {
+        return imageData.clone();
+    }
+
+    @Override
+    public byte[] mopPathMask() {
+        return mopPathMask.clone();
+    }
+
+    @Override
+    public byte[] carpetMapMask() {
+        return carpetMapMask.clone();
     }
 
     public record MapPoint(int x, int y) {

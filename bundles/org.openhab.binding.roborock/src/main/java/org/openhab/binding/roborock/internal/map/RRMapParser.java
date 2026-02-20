@@ -25,29 +25,49 @@ import org.slf4j.LoggerFactory;
 /**
  * Minimal RR map parser for extracting stable map metadata and image block.
  *
- * @author OpenHAB project contribution
+ * @author reyhard - Initial contribution
  */
 @NonNullByDefault
 public final class RRMapParser {
+    /** Block type for charger position data. */
     public static final int BLOCK_CHARGER = 1;
+    /** Block type for map image data and image geometry. */
     public static final int BLOCK_IMAGE = 2;
+    /** Block type for the already cleaned path polyline. */
     public static final int BLOCK_PATH = 3;
+    /** Block type for the go-to path polyline. */
     public static final int BLOCK_GOTO_PATH = 4;
+    /** Block type for predicted path points. */
     public static final int BLOCK_PREDICTED_PATH = 5;
+    /** Block type for currently cleaned rectangular zones. */
     public static final int BLOCK_CURRENTLY_CLEANED_ZONES = 6;
+    /** Block type for go-to target coordinates. */
     public static final int BLOCK_GOTO_TARGET = 7;
+    /** Block type for current robot position and optional heading. */
     public static final int BLOCK_ROBOT_POSITION = 8;
+    /** Block type for no-go polygon areas. */
     public static final int BLOCK_NO_GO_AREAS = 9;
+    /** Block type for virtual wall segments. */
     public static final int BLOCK_VIRTUAL_WALLS = 10;
+    /** Block type for map block metadata currently ignored by this parser. */
     public static final int BLOCK_BLOCKS = 11;
+    /** Block type for mop-forbidden polygon areas. */
     public static final int BLOCK_MOP_FORBIDDEN_AREAS = 12;
+    /** Block type for detected obstacles without photo payload. */
     public static final int BLOCK_OBSTACLES = 13;
+    /** Block type for ignored obstacles without photo payload. */
     public static final int BLOCK_IGNORED_OBSTACLES = 14;
+    /** Block type for detected obstacles with extended (photo-capable) payload. */
     public static final int BLOCK_OBSTACLES_WITH_PHOTO = 15;
+    /** Block type for ignored obstacles with extended (photo-capable) payload. */
     public static final int BLOCK_IGNORED_OBSTACLES_WITH_PHOTO = 16;
+    /** Block type for carpet map mask. */
     public static final int BLOCK_CARPET_MAP = 17;
+    /** Block type for mop path mask. */
     public static final int BLOCK_MOP_PATH = 18;
+    /** Block type for carpet-forbidden polygon areas. */
     public static final int BLOCK_CARPET_FORBIDDEN_AREAS = 19;
+    /** Block type for digest/summary payload currently ignored by this parser. */
     public static final int BLOCK_DIGEST = 1024;
 
     private static final int MAIN_HEADER_LENGTH_OFFSET = 0x02;
