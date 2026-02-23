@@ -112,10 +112,6 @@ public abstract class GenericConverter<T extends BaseCluster> implements Attribu
         stateCache.put(channelId, state);
     }
 
-    public final boolean isChannelLinked(String channelId) {
-        return handler.isLinked(endpointNumber, channelId);
-    }
-
     public final void triggerChannel(String channelId, String event) {
         handler.triggerChannel(endpointNumber, channelId, event);
     }

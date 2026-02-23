@@ -3,7 +3,20 @@
 This binding supports generic Bluetooth devices.
 And has specialist extensions for the following manufacturers products:
 
-<!--list-subs-->
+- AirThings
+- AM43 Blinds
+- BlueGiga
+- BlueZ
+- BluKii
+- Daikin Madoka
+- EnOcean
+- Govee
+- Grundfos Alpha
+- Hunter Douglas (Luxaflex) PowerView
+- Listener
+- RadonEye
+- Roaming
+- RuuviAir, RuuviTag
 
 ## Bridges
 

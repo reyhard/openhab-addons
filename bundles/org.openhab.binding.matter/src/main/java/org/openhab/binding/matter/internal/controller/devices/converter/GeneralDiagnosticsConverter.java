@@ -42,18 +42,24 @@ public class GeneralDiagnosticsConverter extends GenericConverter<GeneralDiagnos
     }
 
     @Override
+    public void pollCluster() {
+        handler.readCluster(GeneralDiagnosticsCluster.class, endpointNumber, initializingCluster.id)
+                .thenAccept(cluster -> {
+                    updateThingProperties(cluster);
+                }).exceptionally(e -> {
+                    logger.debug("Error polling general diagnostics", e);
+                    return null;
+                });
+    }
+
+    @Override
     public Map<Channel, @Nullable StateDescription> createChannels(ChannelGroupUID channelGroupUID) {
         return Collections.emptyMap();
     }
 
     @Override
     public void onEvent(AttributeChangedMessage message) {
-        switch (message.path.attributeName) {
-            case GeneralDiagnosticsCluster.ATTRIBUTE_NETWORK_INTERFACES:
-                updateThingAttributeProperty(message.path.attributeName,
-                        message.value != null ? gson.toJson(message.value) : null);
-                break;
-        }
+        updateThingAttributeProperty(message.path.attributeName, message.value);
         super.onEvent(message);
     }
 

@@ -3,7 +3,16 @@
 This binding supports generic Modbus TCP and serial slave devices.
 And it has specialist extensions for the following manufacturers products:
 
-<!--list-subs-->
+- Hager E3/DC
+- FoxEss Inverters (Solakon ONE, Avocado 22 Pro, etc.)
+- Helios Easy Controls
+- Kermi
+- Lambda
+- Saia Burgess Controls SBC
+- Stiebel Eltron ISG
+- Studer
+- SunGrow
+- SunSpec
 
 RTU, ASCII and BIN variants of Serial Modbus are supported.
 Modbus TCP slaves are usually also called as Modbus TCP servers.
